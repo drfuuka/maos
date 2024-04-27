@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Laporan;
 
-use App\Exports\LaporanPengurusExport;
 use App\Http\Controllers\Controller;
 use App\Models\Laporan\LaporanPengurus;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
 
 class LaporanPengurusController extends Controller
 {
@@ -18,7 +20,11 @@ class LaporanPengurusController extends Controller
      */
     public function index()
     {
-        $data['laporanGudep'] = LaporanPengurus::get();
+        if(Auth::user()->role !== 'Pengurus') {
+            $data['laporanPengurus'] = LaporanPengurus::get();
+        } else {
+            $data['laporanPengurus'] = LaporanPengurus::where('user_id', Auth::id())->get();
+        }
 
         return view('pages.laporan.pengurus.index', $data);
     }
@@ -91,7 +97,7 @@ class LaporanPengurusController extends Controller
      */
     public function edit(string $id)
     {
-        $data['laporanGudep'] = LaporanPengurus::find($id);
+        $data['laporanPengurus'] = LaporanPengurus::find($id);
 
         return view('pages.laporan.pengurus.edit', $data);
     }
@@ -113,17 +119,17 @@ class LaporanPengurusController extends Controller
             'dokumen_pendukung' => ['nullable','file'],
         ]);
 
-        $laporanGudep = LaporanPengurus::find($id);
+        $laporanPengurus = LaporanPengurus::find($id);
 
-        $fotoKegiatan = $laporanGudep->foto_kegiatan;
+        $fotoKegiatan = $laporanPengurus->foto_kegiatan;
         if ($request->hasFile('foto_kegiatan') && $request->foto_kegiatan->isValid()) {
             // Get the old file path from the database
-            $oldFilePath = $laporanGudep->foto_kegiatan;
+            $oldFilePath = $laporanPengurus->foto_kegiatan;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('foto_kegiatan');
@@ -131,15 +137,15 @@ class LaporanPengurusController extends Controller
             $fotoKegiatan = $file->storeAs('laporan-pengurus/foto-kegiatan', $fileName, 'public');
         }
 
-        $dokumenPendukung = $laporanGudep->dokumen_pendukung;
+        $dokumenPendukung = $laporanPengurus->dokumen_pendukung;
         if ($request->hasFile('dokumen_pendukung') && $request->dokumen_pendukung->isValid()) {
             // Get the old file path from the database
-            $oldFilePath = $laporanGudep->dokumen_pendukung;
+            $oldFilePath = $laporanPengurus->dokumen_pendukung;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('dokumen_pendukung');
@@ -147,15 +153,15 @@ class LaporanPengurusController extends Controller
             $dokumenPendukung = $file->storeAs('laporan-pengurus/dokumen-pendukung', $fileName, 'public');
         }
 
-        $laporanGudep->user_id           = Auth::id();
-        $laporanGudep->nama_kegiatan     = $request->nama_kegiatan;
-        $laporanGudep->tanggal_kegiatan  = $request->tanggal_kegiatan;
-        $laporanGudep->tempat_kegiatan   = $request->tempat_kegiatan;
-        $laporanGudep->jumlah_peserta    = $request->jumlah_peserta;
-        $laporanGudep->foto_kegiatan     = $fotoKegiatan;
-        $laporanGudep->evaluasi_kegiatan = $request->evaluasi_kegiatan;
-        $laporanGudep->dokumen_pendukung = $dokumenPendukung;
-        $laporanGudep->save();
+        $laporanPengurus->user_id           = Auth::id();
+        $laporanPengurus->nama_kegiatan     = $request->nama_kegiatan;
+        $laporanPengurus->tanggal_kegiatan  = $request->tanggal_kegiatan;
+        $laporanPengurus->tempat_kegiatan   = $request->tempat_kegiatan;
+        $laporanPengurus->jumlah_peserta    = $request->jumlah_peserta;
+        $laporanPengurus->foto_kegiatan     = $fotoKegiatan;
+        $laporanPengurus->evaluasi_kegiatan = $request->evaluasi_kegiatan;
+        $laporanPengurus->dokumen_pendukung = $dokumenPendukung;
+        $laporanPengurus->save();
 
         DB::commit();
 
@@ -169,38 +175,87 @@ class LaporanPengurusController extends Controller
     {
         DB::beginTransaction();
 
-        $laporanGudep = LaporanPengurus::find($id);
+        $laporanPengurus = LaporanPengurus::find($id);
 
         // start: delete dokumen di storage ketika data di delete
 
             // Get the old file path from the database
-            $oldFilePath = $laporanGudep->foto_kegiatan;
+            $oldFilePath = $laporanPengurus->foto_kegiatan;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             // Get the old file path from the database
-            $oldFilePath = $laporanGudep->dokumen_pendukung;
+            $oldFilePath = $laporanPengurus->dokumen_pendukung;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
         // end: delete dokumen di storage ketika data di delete
 
-        $laporanGudep->delete();
+        $laporanPengurus->delete();
 
         DB::commit();
         return redirect()->route('laporan-pengurus.index')->with('success', 'Data berhasil dihapus!');
-    }   
+    }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new LaporanPengurusExport, 'laporan-pengurus.xlsx');
+        $request->validate([
+            'dari_tanggal'   => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date'],
+            'sampai_tanggal' => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date', 'after_or_equal:dari_tanggal'],
+        ]);
+        
+        $dari_tanggal = Carbon::create($request->dari_tanggal);
+        $sampai_tanggal = Carbon::create($request->sampai_tanggal);
+        
+        $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
+        
+        $query = LaporanPengurus::query();
+        
+        if ($request->filter_tanggal) {
+            $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);
+        }
+        
+        $data['data'] = $query->get()->map(function ($item) {
+            return [
+                'nama_kegiatan'     => $item->nama_kegiatan,
+                'tanggal_kegiatan'  => $item->tanggal_kegiatan,
+                'tempat_kegiatan'   => $item->tempat_kegiatan,
+                'jumlah_peserta'    => $item->jumlah_peserta,
+                'dibuat_oleh'       => $item->user->fullname,
+                'dibuat_tanggal'    => Carbon::create($item->created_at)->format('d M Y'),
+                'evaluasi_kegiatan' => $item->evaluasi_kegiatan
+            ];
+        });        
+    
+        // Render the view to HTML
+        $html = view('exports.laporan.export-pengurus', $data)->render();
+        
+        // Setup Dompdf options
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        
+        // Instantiate Dompdf with options
+        $dompdf = new Dompdf($options);
+        
+        // Load HTML content
+        $dompdf->loadHtml($html);
+        
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF (output to browser or file)
+        $dompdf->render();
+        
+        // Output PDF to the browser
+        return $dompdf->stream('laporan_pengurus.pdf');
     }
 }

@@ -51,13 +51,15 @@
                             </div>
 
                             <div class="mb-3 form-password-toggle">
-                                <label class="form-label" for="password">Password</label>
+                                <label class="form-label" for="password">Kata Sandi</label>
                                 <div class="input-group input-group-merge">
                                     <input type="password" id="password" class="form-control" name="password"
                                         placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
                                         aria-describedby="password" value="{{ old('password') }}" />
                                     <span class="input-group-text cursor-pointer"><i class="ti ti-eye-off"></i></span>
                                 </div>
+                                <small class="text-primary"><a href="{{ route('forgot-password.index') }}">Lupa kata
+                                        sandi?</a></small>
                                 @error('password')
                                     <small class="text-danger" role="alert">
                                         {{ $message }}

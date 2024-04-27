@@ -17,6 +17,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-header">Ubah LPJ Gugus Depan</h5>
                 <div class="card-header">
+                    <a class="btn btn-label-primary" href="{{ route('lpj-gudep.export-item', $lpjGudep->id) }}">Cetak</a>
                     <a class="btn btn-label-secondary" href="{{ route('lpj-gudep.index') }}">Kembali</a>
                 </div>
             </div>
@@ -91,7 +92,7 @@
 
                     <div class="mb-3">
                         <label for="saran" class="form-label">Saran</label>
-                        <textarea name="saran" id="saran" class="form-control">{{ $lpjGudep->saran }}</textarea>
+                        <textarea name="saran" id="saran" class="form-control" {{ Auth::user()->role !== 'Admin' ? 'disabled' : '' }}>{{ $lpjGudep->saran }}</textarea>
                         @error('saran')
                             <small class="text-danger" role="alert">
                                 {{ $message }}
@@ -119,9 +120,11 @@
                         @enderror
                     </div>
 
-                    <div class="d-flex justify-content-end mt-5">
-                        <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
-                    </div>
+                    @if (Auth::user()->role !== 'Pengurus')
+                        <div class="d-flex justify-content-end mt-5">
+                            <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
+                        </div>
+                    @endif
                 </form>
             </div>
         </div>

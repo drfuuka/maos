@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers\Proposal;
 
-use App\Exports\ProposalPengurusExport;
 use App\Http\Controllers\Controller;
 use App\Mail\Proposal\ProposalDiterima;
 use App\Mail\Proposal\ProposalDitolak;
 use App\Mail\Proposal\VerifikasiProposal;
 use App\Models\Proposal\ProposalPengurus;
 use App\Models\User;
-use Exception;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
 
 class ProposalPengurusController extends Controller
 {
@@ -24,7 +25,12 @@ class ProposalPengurusController extends Controller
      */
     public function index()
     {
-        $data['proposalPengurus'] = ProposalPengurus::get();
+
+        if(Auth::user()->role !== 'Pengurus') {
+            $data['proposalPengurus'] = ProposalPengurus::get();
+        } else {
+            $data['proposalPengurus'] = ProposalPengurus::where('user_id', Auth::id())->get();
+        }
 
         return view('pages.proposal.pengurus.index', $data);
     }
@@ -55,7 +61,7 @@ class ProposalPengurusController extends Controller
             'jadwal_kegiatan'  => ['required', 'string'],
             'rincian_dana'     => ['required', 'string'],
             'penutup'          => ['required', 'string'],
-            'dokumen_proposal' => ['required', 'file'],
+            'dokumen_proposal' => ['required','file'],
         ]);
 
         $dokumenProposal = null;
@@ -80,7 +86,7 @@ class ProposalPengurusController extends Controller
             'dokumen_proposal'  => $dokumenProposal,
             'status_verifikasi' => null
         ]);
-        
+
         // get seluruh akun dengan role ketua
         $ketuaEmailList = User::where('role', 'Ketua')->pluck('email')->toArray();
 
@@ -130,7 +136,7 @@ class ProposalPengurusController extends Controller
             'jadwal_kegiatan'   => ['required', 'string'],
             'rincian_dana'      => ['required', 'string'],
             'penutup'           => ['required', 'string'],
-            'dokumen_proposal'  => ['nullable', 'file'],
+            'dokumen_proposal'  => ['nullable'],
             'status_verifikasi' => ['nullable', 'string', 'in:Ditolak,Diterima'],
         ]);
 
@@ -138,13 +144,14 @@ class ProposalPengurusController extends Controller
 
         $dokumenProposal = $proposalPengurus->dokumen_proposal;
         if ($request->hasFile('dokumen_proposal') && $request->dokumen_proposal->isValid()) {
+            
             // Get the old file path from the database
             $oldFilePath = $proposalPengurus->dokumen_proposal;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('dokumen_proposal');
@@ -164,7 +171,7 @@ class ProposalPengurusController extends Controller
         $proposalPengurus->penutup           = $request->penutup;
         $proposalPengurus->dokumen_proposal  = $dokumenProposal;
 
-        if($request->status_verifikasi) {
+        if($request->status_verifikasi && $request->status_verifikasi !== $proposalPengurus->status_verifikasi) {
             $proposalPengurus->status_verifikasi = $request->status_verifikasi;
             $proposalPengurus->verificator_id = Auth::id();
 
@@ -197,21 +204,111 @@ class ProposalPengurusController extends Controller
             $oldFilePath = $proposalPengurus->dokumen_proposal;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
         // end: delete dokumen di storage ketika data di delete
 
         $proposalPengurus->delete();
+        $proposalPengurus->lpj->delete();
 
         DB::commit();
         return redirect()->route('proposal-pengurus.index')->with('success', 'Data berhasil dihapus!');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new ProposalPengurusExport, 'proposal-pengurus.xlsx');
+        $request->validate([
+            'dari_tanggal'   => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date'],
+            'sampai_tanggal' => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date', 'after_or_equal:dari_tanggal'],
+        ]);
+        
+        $dari_tanggal = Carbon::create($request->dari_tanggal);
+        $sampai_tanggal = Carbon::create($request->sampai_tanggal);
+        
+        $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
+        
+        $query = ProposalPengurus::query();
+        
+        if ($request->filter_tanggal) {
+            $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);
+        }
+        
+        $data['data'] = $query->get()->map(function ($item) {
+            return [
+                'dibuat_oleh'       => $item->user->fullname,
+                'jenis_proposal'    => $item->jenis_proposal,
+                'dasar_kegiatan'    => $item->dasar_kegiatan,
+                'maksud_tujuan'     => $item->maksud_tujuan,
+                'nama_kegiatan'     => $item->nama_kegiatan,
+                'tema_kegiatan'     => $item->tema_kegiatan,
+                'kepanitiaan'       => $item->kepanitiaan,
+                'tanggal_kegiatan'  => $item->tanggal_kegiatan,
+                'jadwal_kegiatan'   => $item->jadwal_kegiatan,
+                'rincian_dana'      => $item->rincian_dana,
+                'penutup'           => $item->penutup,
+                'status_verifikasi' => $item->status_verifikasi,
+                'diverifikasi_oleh' => $item->verificator?->fullname ?? '-',
+                'dibuat_oleh'       => $item->user->fullname,
+                'dibuat_tanggal'    => Carbon::create($item->created_at)->format('d M Y'),
+            ];
+        });        
+    
+        // Render the view to HTML
+        $html = view('exports.proposal.export-pengurus', $data)->render();
+        
+        // Setup Dompdf options
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        
+        // Instantiate Dompdf with options
+        $dompdf = new Dompdf($options);
+        
+        // Load HTML content
+        $dompdf->loadHtml($html);
+        
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF (output to browser or file)
+        $dompdf->render();
+        
+        // Output PDF to the browser
+        return $dompdf->stream('proposal_pengurus.pdf');
+    }
+
+    public function exportItem($id) {
+        $data['data'] = ProposalPengurus::find($id);
+
+        $userTtd          = $data['data']->user->detail->ttd;
+        $verificatorTtd   = $data['data']->verificator->detail->ttd;
+
+        $data['ttd_user']        = $userTtd ? base64_encode(Storage::get($userTtd)) : null;
+        $data['ttd_verificator'] = $verificatorTtd ? base64_encode(Storage::get($verificatorTtd)) : null;
+
+        // Render the view to HTML
+        $html = view('exports.proposal.export-pengesahan-pengurus', $data)->render();
+        
+        // Setup Dompdf options
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        
+        // Instantiate Dompdf with options
+        $dompdf = new Dompdf($options);
+        
+        // Load HTML content
+        $dompdf->loadHtml($html);
+        
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF (output to browser or file)
+        $dompdf->render();
+        
+        // Output PDF to the browser
+        return $dompdf->stream('Lembar Pengesahan Proposal Pengurus.pdf');
     }
 }

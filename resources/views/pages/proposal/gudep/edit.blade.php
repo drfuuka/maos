@@ -17,6 +17,8 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-header">Ubah Proposal Gugus Depan</h5>
                 <div class="card-header">
+                    <a class="btn btn-label-primary"
+                        href="{{ route('proposal-gudep.export-item', $proposalGudep->id) }}">Cetak</a>
                     <a class="btn btn-label-secondary" href="{{ route('proposal-gudep.index') }}">Kembali</a>
                 </div>
             </div>
@@ -175,9 +177,11 @@
                         @enderror
                     </div>
 
-                    <div class="d-flex justify-content-end mt-5">
-                        <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
-                    </div>
+                    @if (Auth::user()->role !== 'Pengurus')
+                        <div class="d-flex justify-content-end mt-5">
+                            <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
+                        </div>
+                    @endif
                 </form>
             </div>
         </div>

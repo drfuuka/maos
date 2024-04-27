@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\Laporan;
 
-use App\Exports\LaporanGudepExport;
 use App\Http\Controllers\Controller;
 use App\Models\Laporan\LaporanGudep;
-use Exception;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Validation\Rule;
 
 class LaporanGudepController extends Controller
 {
@@ -19,7 +20,12 @@ class LaporanGudepController extends Controller
      */
     public function index()
     {
-        $data['laporanGudep'] = LaporanGudep::get();
+
+        if(Auth::user()->role !== 'Gudep') {
+            $data['laporanGudep'] = LaporanGudep::get();
+        } else {
+            $data['laporanGudep'] = LaporanGudep::where('user_id', Auth::id())->get();
+        }
 
         return view('pages.laporan.gudep.index', $data);
     }
@@ -122,9 +128,9 @@ class LaporanGudepController extends Controller
             $oldFilePath = $laporanGudep->foto_kegiatan;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('foto_kegiatan');
@@ -138,9 +144,9 @@ class LaporanGudepController extends Controller
             $oldFilePath = $laporanGudep->dokumen_pendukung;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('dokumen_pendukung');
@@ -178,18 +184,18 @@ class LaporanGudepController extends Controller
             $oldFilePath = $laporanGudep->foto_kegiatan;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             // Get the old file path from the database
             $oldFilePath = $laporanGudep->dokumen_pendukung;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
         // end: delete dokumen di storage ketika data di delete
@@ -200,8 +206,57 @@ class LaporanGudepController extends Controller
         return redirect()->route('laporan-gudep.index')->with('success', 'Data berhasil dihapus!');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new LaporanGudepExport, 'laporan-gudep.xlsx');
+        $request->validate([
+            'dari_tanggal'   => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date'],
+            'sampai_tanggal' => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date', 'after_or_equal:dari_tanggal'],
+        ]);
+        
+        $dari_tanggal = Carbon::create($request->dari_tanggal);
+        $sampai_tanggal = Carbon::create($request->sampai_tanggal);
+        
+        $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
+        
+        $query = LaporanGudep::query();
+        
+        if ($request->filter_tanggal) {
+            $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);
+        }
+        
+        $data['data'] = $query->get()->map(function ($item) {
+            return [
+                'nama_kegiatan'     => $item->nama_kegiatan,
+                'tanggal_kegiatan'  => $item->tanggal_kegiatan,
+                'tempat_kegiatan'   => $item->tempat_kegiatan,
+                'jumlah_peserta'    => $item->jumlah_peserta,
+                'dibuat_oleh'       => $item->user->fullname,
+                'dibuat_tanggal'    => Carbon::create($item->created_at)->format('d M Y'),
+                'evaluasi_kegiatan' => $item->evaluasi_kegiatan
+            ];
+        });        
+    
+        // Render the view to HTML
+        $html = view('exports.laporan.export-gudep', $data)->render();
+        
+        // Setup Dompdf options
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        
+        // Instantiate Dompdf with options
+        $dompdf = new Dompdf($options);
+        
+        // Load HTML content
+        $dompdf->loadHtml($html);
+        
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF (output to browser or file)
+        $dompdf->render();
+        
+        // Output PDF to the browser
+        return $dompdf->stream('laporan_gudep.pdf');
     }
 }

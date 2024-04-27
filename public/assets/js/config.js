@@ -46,7 +46,7 @@ let config = {
     enableMenuLocalStorage: true, // Enable menu state with local storage support
 };
 
-let assetsPath = "http://192.168.18.58:8000/assets/",
+let assetsPath = "http://localhost:8000/assets/",
     templateName = document.documentElement.getAttribute("data-template"),
     rtlSupport = true; // set true for rtl support (rtl + ltr), false for ltr only.
 

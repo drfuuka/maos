@@ -2,20 +2,24 @@
 
 namespace App\Http\Controllers\Lpj;
 
-use App\Exports\LpjPengurusExport;
 use App\Http\Controllers\Controller;
+use App\Models\Lpj\LpjPengurus;
+use App\Models\Proposal\ProposalPengurus;
+use App\Exports\LpjPengurusExport;
 use App\Mail\Lpj\LpjDiterima;
 use App\Mail\Lpj\LpjDitolak;
 use App\Mail\Lpj\VerifikasiLpj;
-use App\Models\Lpj\LpjPengurus;
-use App\Models\Proposal\ProposalPengurus;
 use App\Models\User;
+use Carbon\Carbon;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 
 class LpjPengurusController extends Controller
@@ -25,7 +29,12 @@ class LpjPengurusController extends Controller
      */
     public function index()
     {
-        $data['lpjPengurus'] = LpjPengurus::with('proposal')->get();
+
+        if(Auth::user()->role !== 'Pengurus') {
+            $data['lpjPengurus'] = LpjPengurus::with('proposal')->get();
+        } else {
+            $data['lpjPengurus'] = LpjPengurus::with('proposal')->where('user_id', Auth::id())->get();
+        }
 
         return view('pages.lpj.pengurus.index', $data);
     }
@@ -52,7 +61,6 @@ class LpjPengurusController extends Controller
             'foto_kegiatan'     => ['required', 'file'],
             'dokumen_lpj'       => ['required', 'file'],
             'evaluasi'          => ['required', 'string'],
-            'saran'             => ['required', 'string'],
         ]);
 
         $fotoKegiatan = null;
@@ -75,7 +83,6 @@ class LpjPengurusController extends Controller
             'foto_kegiatan'     => $fotoKegiatan,
             'dokumen_lpj'       => $dokumenLpj,
             'evaluasi'          => $request->evaluasi,
-            'saran'             => $request->saran
         ]);
 
         // get seluruh akun dengan role ketua
@@ -122,7 +129,7 @@ class LpjPengurusController extends Controller
             'foto_kegiatan'     => ['nullable', 'file'],
             'dokumen_lpj'       => ['nullable', 'file'],
             'evaluasi'          => ['required', 'string'],
-            'saran'             => ['required', 'string'],
+            'saran'             => ['nullable', 'string'],
             'status_verifikasi' => ['nullable', 'string', 'in:Ditolak,Diterima'],
         ]);
 
@@ -134,9 +141,9 @@ class LpjPengurusController extends Controller
             $oldFilePath = $lpjPengurus->foto_kegiatan;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('foto_kegiatan');
@@ -150,9 +157,9 @@ class LpjPengurusController extends Controller
             $oldFilePath = $lpjPengurus->dokumen_lpj;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             $file = $request->file('dokumen_lpj');
@@ -164,9 +171,13 @@ class LpjPengurusController extends Controller
         $lpjPengurus->foto_kegiatan     = $fotoKegiatan;
         $lpjPengurus->dokumen_lpj       = $dokumenLpj;
         $lpjPengurus->evaluasi          = $request->evaluasi;
-        $lpjPengurus->saran             = $request->saran;
 
-        if($request->status_verifikasi) {
+        // hanya ubah saran jika admin yang ubah
+        if(Auth::user()->role === 'Admin') {
+            $lpjPengurus->saran             = $request->saran;
+        }
+
+        if($request->status_verifikasi && $request->status_verifikasi !== $lpjPengurus->status_verifikasi) {
             $lpjPengurus->status_verifikasi = $request->status_verifikasi;
             $lpjPengurus->verificator_id = Auth::id();
 
@@ -199,18 +210,18 @@ class LpjPengurusController extends Controller
             $oldFilePath = $lpjPengurus->dokumen_lpj;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
             // Get the old file path from the database
             $oldFilePath = $lpjPengurus->foto_kegiatan;
 
             // Check if the old file path is not null and the file exists
-            if ($oldFilePath !== null && Storage::disk('public')->exists($oldFilePath)) {
+            if ($oldFilePath !== null && Storage::exists($oldFilePath)) {
                 // Delete the old file
-                Storage::disk('public')->delete($oldFilePath);
+                Storage::delete($oldFilePath);
             }
 
         // end: delete dokumen di storage ketika data di delete
@@ -221,8 +232,90 @@ class LpjPengurusController extends Controller
         return redirect()->route('lpj-pengurus.index')->with('success', 'Data berhasil dihapus!');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new LpjPengurusExport, 'lpj-pengurus.xlsx');
+        $request->validate([
+            'dari_tanggal'   => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date'],
+            'sampai_tanggal' => [Rule::requiredIf($request->filter_tanggal !== null), 'nullable', 'date', 'after_or_equal:dari_tanggal'],
+        ]);
+        
+        $dari_tanggal = Carbon::create($request->dari_tanggal);
+        $sampai_tanggal = Carbon::create($request->sampai_tanggal);
+        
+        $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
+        
+        $query = LpjPengurus::query();
+        
+        if ($request->filter_tanggal) {
+            $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);
+        }
+        
+        $data['data'] = $query->get()->map(function ($item) {
+            return [
+                'nama_proposal'     => $item->proposal->nama_kegiatan,
+                'dibuat_oleh'       => $item->user->fullname,
+                'evaluasi'          => $item->evaluasi,
+                'saran'             => $item->saran,
+                'status_verifikasi' => $item->status_verifikasi,
+                'diverifikasi_oleh' => $item->verificator?->fullname ?? '-',
+                'dibuat_oleh'       => $item->user->fullname,
+                'dibuat_tanggal'    => Carbon::create($item->created_at)->format('d M Y'),
+            ];
+        });        
+    
+        // Render the view to HTML
+        $html = view('exports.lpj.export-pengurus', $data)->render();
+        
+        // Setup Dompdf options
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+        
+        // Instantiate Dompdf with options
+        $dompdf = new Dompdf($options);
+        
+        // Load HTML content
+        $dompdf->loadHtml($html);
+        
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF (output to browser or file)
+        $dompdf->render();
+        
+        // Output PDF to the browser
+        return $dompdf->stream('lpj_pengurus.pdf');
+    }
+
+    public function exportItem($id) {
+        $data['data'] = LpjPengurus::find($id);
+
+        $userTtd          = $data['data']->user->detail?->ttd;
+        $verificatorTtd   = $data['data']->verificator->detail?->ttd;
+
+        $data['ttd_user']        = $userTtd ? base64_encode(Storage::get($userTtd)) : null;
+        $data['ttd_verificator'] = $verificatorTtd ? base64_encode(Storage::get($verificatorTtd)) : null;
+
+        // Render the view to HTML
+        $html = view('exports.lpj.export-pengesahan-pengurus', $data)->render();
+        
+        // Setup Dompdf options
+        $options = new Options();
+        $options->set('isRemoteEnabled', true);
+        
+        // Instantiate Dompdf with options
+        $dompdf = new Dompdf($options);
+        
+        // Load HTML content
+        $dompdf->loadHtml($html);
+        
+        // Set paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+        
+        // Render PDF (output to browser or file)
+        $dompdf->render();
+        
+        // Output PDF to the browser
+        return $dompdf->stream('Lembar Pengesahan Laporan Pertanggungjawaban Pengurus.pdf');
     }
 }

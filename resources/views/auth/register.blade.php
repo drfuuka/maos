@@ -66,7 +66,7 @@
                         <form id="form" class="mb-3" action="{{ route('register.create') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label for="fullname" class="form-label">Fullname</label>
+                                <label for="fullname" class="form-label">Nama Lengkap</label>
                                 <input type="text" class="form-control" id="fullname" name="fullname"
                                     placeholder="Enter your fullname" autofocus value="{{ old('fullname') }}" />
                                 @error('fullname')
@@ -99,7 +99,7 @@
                             </div>
 
                             <div class="mb-3 form-password-toggle">
-                                <label class="form-label" for="password">Password</label>
+                                <label class="form-label" for="password">Kata Sandi</label>
                                 <div class="input-group input-group-merge">
                                     <input type="password" id="password" class="form-control" name="password"
                                         placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
@@ -114,9 +114,9 @@
                             </div>
 
                             <div class="mb-3 form-password-toggle">
-                                <label class="form-label" for="password_confirmation">Password Confirmation</label>
+                                <label class="form-label" for="password_confirmation">Konfirmasi Kata Sandi</label>
                                 <div class="input-group input-group-merge">
-                                    <input type="password_confirmation" id="password_confirmation" class="form-control"
+                                    <input type="password" id="password_confirmation" class="form-control"
                                         name="password_confirmation"
                                         placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
                                         aria-describedby="password_confirmation"

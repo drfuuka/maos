@@ -7,8 +7,8 @@
 
 
         <h4 class="py-3 mb-4">
-            <span class="text-muted fw-light">LPJ / <a class="text-muted" href="{{ route('lpj-pengurus.index') }}">Pengurus</a>
-                / </span>
+            <span class="text-muted fw-light">LPJ / <a class="text-muted" href="{{ route('lpj-pengurus.index') }}">Gugus
+                    Depan</a> / </span>
             Ubah
         </h4>
 
@@ -17,6 +17,8 @@
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="card-header">Ubah LPJ Pengurus</h5>
                 <div class="card-header">
+                    <a class="btn btn-label-primary"
+                        href="{{ route('lpj-pengurus.export-item', $lpjPengurus->id) }}">Cetak</a>
                     <a class="btn btn-label-secondary" href="{{ route('lpj-pengurus.index') }}">Kembali</a>
                 </div>
             </div>
@@ -91,7 +93,7 @@
 
                     <div class="mb-3">
                         <label for="saran" class="form-label">Saran</label>
-                        <textarea name="saran" id="saran" class="form-control">{{ $lpjPengurus->saran }}</textarea>
+                        <textarea name="saran" id="saran" class="form-control" {{ Auth::user()->role !== 'Admin' ? 'disabled' : '' }}>{{ $lpjPengurus->saran }}</textarea>
                         @error('saran')
                             <small class="text-danger" role="alert">
                                 {{ $message }}
@@ -121,9 +123,11 @@
                         @enderror
                     </div>
 
-                    <div class="d-flex justify-content-end mt-5">
-                        <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
-                    </div>
+                    @if (Auth::user()->role !== 'Gudep')
+                        <div class="d-flex justify-content-end mt-5">
+                            <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
+                        </div>
+                    @endif
                 </form>
             </div>
         </div>

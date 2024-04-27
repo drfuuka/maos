@@ -75,16 +75,6 @@
                         @enderror
                     </div>
 
-                    <div class="mb-3">
-                        <label for="saran" class="form-label">Saran</label>
-                        <textarea name="saran" id="saran" class="form-control" placeholder="Tuliskan saran">{{ old('saran') }}</textarea>
-                        @error('saran')
-                            <small class="text-danger" role="alert">
-                                {{ $message }}
-                            </small>
-                        @enderror
-                    </div>
-
                     <div class="d-flex justify-content-end mt-5">
                         <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
                     </div>

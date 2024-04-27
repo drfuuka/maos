@@ -19,6 +19,8 @@ class CheckRole
     {
         $role = Auth::user()->role;
 
+        // dd($roles);
+        
         if(in_array($role, $roles)) {
             return $next($request);
         }

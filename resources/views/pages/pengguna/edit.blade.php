@@ -27,7 +27,7 @@
                     @method('PUT')
 
                     <div class="mb-3">
-                        <label for="fullname" class="form-label">Fullname</label>
+                        <label for="fullname" class="form-label">Nama Lengkap</label>
                         <input type="text" class="form-control" id="fullname" name="fullname"
                             placeholder="Enter your fullname" autofocus value="{{ $user->fullname }}" />
                         @error('fullname')
@@ -60,7 +60,7 @@
                     </div>
 
                     <div class="mb-3 form-password-toggle">
-                        <label class="form-label" for="password">Password</label>
+                        <label class="form-label" for="password">Kata Sandi</label>
                         <div class="input-group input-group-merge">
                             <input type="password" id="password" class="form-control" name="password"
                                 placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
@@ -75,7 +75,7 @@
                     </div>
 
                     <div class="mb-3 form-password-toggle">
-                        <label class="form-label" for="password_confirmation">Password Confirmation</label>
+                        <label class="form-label" for="password_confirmation">Konfirmasi Kata Sandi</label>
                         <div class="input-group input-group-merge">
                             <input type="password_confirmation" id="password_confirmation" class="form-control"
                                 name="password_confirmation"
@@ -171,6 +171,17 @@
                             </small>
                         @enderror
                     </div>
+
+
+                    @if ($user->role !== 'Admin')
+                        <div class="mb-3">
+                            <label for="ttd" class="form-label">TTD</label><br>
+                            <a href="{{ Storage::url($user->detail?->ttd) }}" target="_blank">Lihat Tanda Tangan</a>
+                            <br>
+                            <small style="font-style: italic">Merubah tanda tangan hanya bisa dilakukan di halaman
+                                profil</small>
+                        </div>
+                    @endif
 
                     <div class="d-flex justify-content-end mt-5">
                         <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>

@@ -74,7 +74,15 @@
 
                     <div class="mb-3">
                         <label for="foto_kegiatan" class="form-label">Foto Kegiatan</label>
-                        <input type="file" class="form-control" id="foto_kegiatan" name="foto_kegiatan" autofocus />
+
+                        <div class="d-flex gap-3 align-items-center">
+                            <a href="{{ Storage::url($laporanGudep->foto_kegiatan) }}" target="_blank">
+                                <span class="text-nowrap">
+                                    Lihat File
+                                </span>
+                            </a>
+                            <input type="file" class="form-control" id="foto_kegiatan" name="foto_kegiatan" autofocus />
+                        </div>
                         @error('foto_kegiatan')
                             <small class="text-danger" role="alert">
                                 {{ $message }}
@@ -95,8 +103,15 @@
 
                     <div class="mb-3">
                         <label for="dokumen_pendukung" class="form-label">Dokumen Pendukung</label>
-                        <input type="file" class="form-control" id="dokumen_pendukung" name="dokumen_pendukung" autofocus
-                            value="{{ $laporanGudep->dokumen_pendukung }}" />
+                        <div class="d-flex gap-3 align-items-center">
+                            <a href="{{ Storage::url($laporanGudep->dokumen_pendukung) }}" target="_blank">
+                                <span class="text-nowrap">
+                                    Lihat File
+                                </span>
+                            </a>
+                            <input type="file" class="form-control" id="dokumen_pendukung" name="dokumen_pendukung"
+                                autofocus value="{{ $laporanGudep->dokumen_pendukung }}" />
+                        </div>
                         @error('dokumen_pendukung')
                             <small class="text-danger" role="alert">
                                 {{ $message }}
@@ -104,9 +119,11 @@
                         @enderror
                     </div>
 
-                    <div class="d-flex justify-content-end mt-5">
-                        <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
-                    </div>
+                    @if (Auth::user()->role === 'Gudep')
+                        <div class="d-flex justify-content-end mt-5">
+                            <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
+                        </div>
+                    @endif
                 </form>
             </div>
         </div>

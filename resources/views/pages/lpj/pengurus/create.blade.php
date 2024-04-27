@@ -7,8 +7,8 @@
 
 
         <h4 class="py-3 mb-4">
-            <span class="text-muted fw-light">LPJ / <a class="text-muted" href="{{ route('lpj-pengurus.index') }}">Pengurus</a>
-                / </span>
+            <span class="text-muted fw-light">LPJ / <a class="text-muted" href="{{ route('lpj-pengurus.index') }}">Gugus
+                    Depan</a> / </span>
             Tambah
         </h4>
 

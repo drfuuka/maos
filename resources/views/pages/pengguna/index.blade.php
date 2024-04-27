@@ -13,7 +13,11 @@
         <!-- Basic Bootstrap Table -->
         <div class="card">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-header">Daftar Pengguna</h5>
+                <h5 class="card-header">Pengguna</h5>
+
+                <div class="card-header d-flex justify-content-end gap-3">
+                    <a class="btn btn-primary" href="{{ route('pengguna.create') }}">Tambah</a>
+                </div>
             </div>
             @if (session('success'))
                 <div class="px-4">

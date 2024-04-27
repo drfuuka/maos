@@ -1,6 +1,6 @@
 @extends('layouts.index')
 
-@section('title', 'Laporan Pengurus - Tambah')
+@section('title', 'Laporan Gugus Depan - Tambah')
 
 @section('content')
     <div class="container-xxl flex-grow-1 ">
@@ -8,14 +8,15 @@
 
         <h4 class="py-3 mb-4">
             <span class="text-muted fw-light">Laporan / <a class="text-muted"
-                    href="{{ route('laporan-pengurus.index') }}">Pengurus</a> / </span>
+                    href="{{ route('laporan-pengurus.index') }}">Gugus
+                    Depan</a> / </span>
             Tambah
         </h4>
 
         <!-- Basic Bootstrap Table -->
         <div class="card">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="card-header">Tambah Laporan Pengurus</h5>
+                <h5 class="card-header">Tambah Laporan Gugus Depan</h5>
                 <div class="card-header">
                     <a class="btn btn-label-secondary" href="{{ route('laporan-pengurus.index') }}">Kembali</a>
                 </div>
