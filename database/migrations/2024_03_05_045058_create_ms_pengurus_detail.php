@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('nama_pengaju');
             $table->string('jabatan');
             $table->string('no_hp');
-            $table->string('ttd');
+            $table->string('ttd')->nullable();
             $table->timestamps();
         });
     }

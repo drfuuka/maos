@@ -61,7 +61,7 @@ class PenggunaController extends Controller
             'nama_pengaju' => ['nullable','string'],
             'jabatan'      => ['nullable','string'],
             'no_hp'        => ['required','string'],
-            'ttd'          => ['required'],
+            'ttd'          => ['nullable'],
         ]);
 
         $user = User::create([
@@ -73,26 +73,29 @@ class PenggunaController extends Controller
             'is_active' => NULL
         ]);
         
-        // Get the base64 image data from the request
-        $base64Image = $request->input('ttd');
-
-        // Remove the data URL prefix (e.g., 'data:image/png;base64,')
-        $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
-
-        // Decode the base64 image data
-        $imageData = base64_decode($base64Image);
-
-        // Generate a unique filename for the image
-        $fileName = time() . '_ttd.png';
-
-        // Specify the storage directory
-        $storagePath = 'public/ttd/';
-
-        // Save the image using Laravel's storage disk
-        Storage::put($storagePath . $fileName, $imageData);
-
-        // Set the file path in the $ttd variable
-        $ttd = $storagePath . $fileName;
+        $ttd = null;
+        if($request->ttd) {
+            // Get the base64 image data from the request
+            $base64Image = $request->input('ttd');
+    
+            // Remove the data URL prefix (e.g., 'data:image/png;base64,')
+            $base64Image = preg_replace('/^data:image\/\w+;base64,/', '', $base64Image);
+    
+            // Decode the base64 image data
+            $imageData = base64_decode($base64Image);
+    
+            // Generate a unique filename for the image
+            $fileName = time() . '_ttd.png';
+    
+            // Specify the storage directory
+            $storagePath = 'public/ttd/';
+    
+            // Save the image using Laravel's storage disk
+            Storage::put($storagePath . $fileName, $imageData);
+    
+            // Set the file path in the $ttd variable
+            $ttd = $storagePath . $fileName;
+        }
 
         if ($request->role === 'Pengurus') {
             PengurusDetail::create([
@@ -126,8 +129,10 @@ class PenggunaController extends Controller
 
     public function update(Request $request, $id)
     {
+        try {
+            
             DB::beginTransaction();
-
+    
             $request->validate([
                 'fullname'     => ['required'],
                 'username'     => ['required','unique:ms_user,id,'.$id],
@@ -137,12 +142,12 @@ class PenggunaController extends Controller
                 'nama_mabigus' => ['nullable','string'],
                 'nama_pengaju' => ['nullable','string'],
                 'jabatan'      => ['nullable','string'],
-                'no_hp'        => ['required','string'],
+                'no_hp'        => ['nullable','string'],
                 'is_active'    => ['required','boolean'],
             ]);
-
+    
             $user = User::find($id);
-
+    
             $user->fullname  = $request->fullname;
             $user->username  = $request->username;
             $user->email     = $request->email;
@@ -150,13 +155,11 @@ class PenggunaController extends Controller
             if($request->password) {
                 $user->password  = Hash::make($request->password);
             }
-            
-            $user->role      = $request->role;
-
+    
             // hanya lakukan fungsi dibawah jika admin ubah status user
             if($request->is_active !== null && $user->is_active != $request->is_active) {
                 $user->is_active = $request->is_active;
-
+    
                 // kirim email jika admin update user aktif atau nonaktif
                 if($user->is_active) {
                     Mail::to($user->email)->send(new AkunDiaktifkan($user));
@@ -164,31 +167,35 @@ class PenggunaController extends Controller
                     Mail::to($user->email)->send(new AkunDinonaktifkan($user));
                 }
             }
-
+    
             if ($user->role === 'Pengurus') {
                 $user->detail->update([
                     'nama_pengaju' => $request->nama_pengaju,
                     'jabatan'      => $request->jabatan,
                     'no_hp'        => $request->no_hp,
                 ]);
-
+    
             } else if ($user->role === 'Gudep') {
                 $user->detail->update([
                     'nama_mabigus' => $request->nama_mabigus,
                     'no_hp'        => $request->no_hp
                 ]);
-
+    
             } else if ($user->role === 'Ketua') {
                 $user->detail->update([
                     'no_hp'        => $request->no_hp
                 ]);
             }
-
+    
             $user->save();
-
+    
             DB::commit();
-
+    
             return redirect()->route('pengguna.index')->with('success', 'Data pengguna berhasil diubah');
+        } catch (Exception $e) {
+
+            dd($e);
+        }
     }
 
     public function destroy(string $id)

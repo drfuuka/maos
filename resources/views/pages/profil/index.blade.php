@@ -6,6 +6,8 @@
     <style>
         .signature {
             margin-bottom: 10px;
+            border: 1px solid #00000020;
+            border-radius: 4px
         }
 
         .wrapper {
@@ -112,10 +114,10 @@
 
 
                         @if (Auth::user()->role === 'Gudep')
-                            <div class="mb-3 gudep-form" style="display: none">
+                            <div class="mb-3 gudep-form">
                                 <label for="nama_mabigus" class="form-label">Nama Mabigus</label>
                                 <input type="text" class="form-control" id="nama_mabigus" name="nama_mabigus"
-                                    placeholder="Masukkan nama mabigus" value="{{ Auth::user()->nama_mabigus }}" />
+                                    placeholder="Masukkan nama mabigus" value="{{ Auth::user()->detail->nama_mabigus }}" />
                                 @error('nama_mabigus')
                                     <small class="text-danger" role="alert">
                                         {{ $message }}
@@ -125,10 +127,10 @@
                         @endif
 
                         @if (Auth::user()->role === 'Pengurus')
-                            <div class="mb-3 pengurus-form" style="display: none">
+                            <div class="mb-3 pengurus-form">
                                 <label for="nama_pengaju" class="form-label">Nama Pengaju</label>
                                 <input type="text" class="form-control" id="nama_pengaju" name="nama_pengaju"
-                                    placeholder="Masukkan nama pengaju" value="{{ Auth::user()->nama_pengaju }}" />
+                                    placeholder="Masukkan nama pengaju" value="{{ Auth::user()->detail->nama_pengaju }}" />
                                 @error('nama_pengaju')
                                     <small class="text-danger" role="alert">
                                         {{ $message }}
@@ -136,10 +138,10 @@
                                 @enderror
                             </div>
 
-                            <div class="mb-3 pengurus-form" style="display: none">
+                            <div class="mb-3 pengurus-form">
                                 <label for="jabatan" class="form-label">Jabatan</label>
                                 <input type="text" class="form-control" id="jabatan" name="jabatan"
-                                    placeholder="Masukkan jabatan" value="{{ Auth::user()->jabatan }}" />
+                                    placeholder="Masukkan jabatan" value="{{ Auth::user()->detail->jabatan }}" />
                                 @error('fullname')
                                     <small class="text-danger" role="alert">
                                         {{ $message }}

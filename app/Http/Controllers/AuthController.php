@@ -173,7 +173,7 @@ class AuthController extends Controller
             'nama_mabigus' => ['nullable','string'],
             'nama_pengaju' => ['nullable','string'],
             'jabatan'      => ['nullable','string'],
-            'no_hp'        => ['required','string'],
+            'no_hp'        => ['nullable','string'],
         ]);
 
         $user = User::find(Auth::id());
@@ -202,18 +202,18 @@ class AuthController extends Controller
             $user->detail->update([
                 'nama_pengaju' => $request->nama_pengaju,
                 'jabatan'      => $request->jabatan,
-                'no_hp'        => $request->no_hp,
+                'no_hp'        => $request->no_hp ?? $user->detail->no_hp,
             ]);
 
         } else if ($user->role === 'Gudep') {
             $user->detail->update([
                 'nama_mabigus' => $request->nama_mabigus,
-                'no_hp'        => $request->no_hp
+                'no_hp'        => $request->no_hp ?? $user->detail->no_hp
             ]);
 
         } else if ($user->role === 'Ketua') {
             $user->detail->update([
-                'no_hp'        => $request->no_hp
+                'no_hp'        => $request->no_hp ?? $user->detail->no_hp
             ]);
         }
 

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->references('id')->on('ms_user')->onDelete('cascade');
             $table->string('no_hp');
-            $table->string('ttd');
+            $table->string('ttd')->nullable();
             $table->timestamps();
         });
     }

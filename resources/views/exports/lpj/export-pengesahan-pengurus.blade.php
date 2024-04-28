@@ -40,7 +40,7 @@
                         <img src="data:image/jpeg;base64,{{ $ttd_user }}" alt="" width="350">
                     @endif
                 </div>
-                <span style="text-decoration: underline">{{ $data->user->fullname }}a</span>
+                <span style="text-decoration: underline">{{ $data->user->fullname }}</span>
             </div>
         </td>
         <td>
