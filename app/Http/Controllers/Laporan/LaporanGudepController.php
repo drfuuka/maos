@@ -154,14 +154,17 @@ class LaporanGudepController extends Controller
             $dokumenPendukung = $file->storeAs('laporan-gudep/dokumen-pendukung', $fileName, 'public');
         }
 
-        $laporanGudep->user_id           = Auth::id();
-        $laporanGudep->nama_kegiatan     = $request->nama_kegiatan;
-        $laporanGudep->tanggal_kegiatan  = $request->tanggal_kegiatan;
-        $laporanGudep->tempat_kegiatan   = $request->tempat_kegiatan;
-        $laporanGudep->jumlah_peserta    = $request->jumlah_peserta;
-        $laporanGudep->foto_kegiatan     = $fotoKegiatan;
-        $laporanGudep->evaluasi_kegiatan = $request->evaluasi_kegiatan;
-        $laporanGudep->dokumen_pendukung = $dokumenPendukung;
+        if(Auth::user()->role === 'Gudep' || Auth::user()->role === 'Admin') {
+            $laporanGudep->user_id           = Auth::id();
+            $laporanGudep->nama_kegiatan     = $request->nama_kegiatan;
+            $laporanGudep->tanggal_kegiatan  = $request->tanggal_kegiatan;
+            $laporanGudep->tempat_kegiatan   = $request->tempat_kegiatan;
+            $laporanGudep->jumlah_peserta    = $request->jumlah_peserta;
+            $laporanGudep->foto_kegiatan     = $fotoKegiatan;
+            $laporanGudep->evaluasi_kegiatan = $request->evaluasi_kegiatan;
+            $laporanGudep->dokumen_pendukung = $dokumenPendukung;
+        }
+
         $laporanGudep->save();
 
         DB::commit();
@@ -174,6 +177,10 @@ class LaporanGudepController extends Controller
      */
     public function destroy(string $id)
     {
+        if(Auth::user()->role !== 'Admin') {
+            return redirect()->route('laporan-gudep.index')->with('error', 'Kamu tidak memiliki akses');
+        }
+
         DB::beginTransaction();
 
         $laporanGudep = LaporanGudep::find($id);
@@ -219,6 +226,10 @@ class LaporanGudepController extends Controller
         $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
         
         $query = LaporanGudep::query();
+
+        if(Auth::user()->role === 'Gudep') {
+            $query->where('user_id', Auth::id());
+        }
         
         if ($request->filter_tanggal) {
             $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);

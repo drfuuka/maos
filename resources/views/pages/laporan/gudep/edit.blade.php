@@ -119,7 +119,7 @@
                         @enderror
                     </div>
 
-                    @if (Auth::user()->role === 'Gudep')
+                    @if (Auth::user()->role === 'Gudep' || Auth::user()->role === 'Admin')
                         <div class="d-flex justify-content-end mt-5">
                             <button class="btn btn-primary d-grid" id="btn-form">Simpan</button>
                         </div>

@@ -159,17 +159,19 @@ class ProposalGudepController extends Controller
             $dokumenProposal = $file->storeAs('proposal-gudep/dokumen-pendukung', $fileName, 'public');
         }
 
-        $proposalGudep->jenis_proposal    = $request->jenis_proposal;
-        $proposalGudep->dasar_kegiatan    = $request->dasar_kegiatan;
-        $proposalGudep->maksud_tujuan     = $request->maksud_tujuan;
-        $proposalGudep->nama_kegiatan     = $request->nama_kegiatan;
-        $proposalGudep->tema_kegiatan     = $request->tema_kegiatan;
-        $proposalGudep->kepanitiaan       = $request->kepanitiaan;
-        $proposalGudep->tanggal_kegiatan  = $request->tanggal_kegiatan;
-        $proposalGudep->jadwal_kegiatan   = $request->jadwal_kegiatan;
-        $proposalGudep->rincian_dana      = $request->rincian_dana;
-        $proposalGudep->penutup           = $request->penutup;
-        $proposalGudep->dokumen_proposal  = $dokumenProposal;
+        if(Auth::user()->role === 'Gudep' || Auth::user()->role === 'Admin') {
+            $proposalGudep->jenis_proposal    = $request->jenis_proposal;
+            $proposalGudep->dasar_kegiatan    = $request->dasar_kegiatan;
+            $proposalGudep->maksud_tujuan     = $request->maksud_tujuan;
+            $proposalGudep->nama_kegiatan     = $request->nama_kegiatan;
+            $proposalGudep->tema_kegiatan     = $request->tema_kegiatan;
+            $proposalGudep->kepanitiaan       = $request->kepanitiaan;
+            $proposalGudep->tanggal_kegiatan  = $request->tanggal_kegiatan;
+            $proposalGudep->jadwal_kegiatan   = $request->jadwal_kegiatan;
+            $proposalGudep->rincian_dana      = $request->rincian_dana;
+            $proposalGudep->penutup           = $request->penutup;
+            $proposalGudep->dokumen_proposal  = $dokumenProposal;
+        }
 
         if($request->status_verifikasi && $request->status_verifikasi !== $proposalGudep->status_verifikasi) {
             $proposalGudep->status_verifikasi = $request->status_verifikasi;
@@ -231,6 +233,10 @@ class ProposalGudepController extends Controller
         $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
         
         $query = ProposalGudep::query();
+
+        if(Auth::user()->role === 'Gudep') {
+            $query->where('user_id', Auth::id());
+        }
         
         if ($request->filter_tanggal) {
             $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);

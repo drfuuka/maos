@@ -153,14 +153,17 @@ class LaporanPengurusController extends Controller
             $dokumenPendukung = $file->storeAs('laporan-pengurus/dokumen-pendukung', $fileName, 'public');
         }
 
-        $laporanPengurus->user_id           = Auth::id();
-        $laporanPengurus->nama_kegiatan     = $request->nama_kegiatan;
-        $laporanPengurus->tanggal_kegiatan  = $request->tanggal_kegiatan;
-        $laporanPengurus->tempat_kegiatan   = $request->tempat_kegiatan;
-        $laporanPengurus->jumlah_peserta    = $request->jumlah_peserta;
-        $laporanPengurus->foto_kegiatan     = $fotoKegiatan;
-        $laporanPengurus->evaluasi_kegiatan = $request->evaluasi_kegiatan;
-        $laporanPengurus->dokumen_pendukung = $dokumenPendukung;
+        if(Auth::user()->role === 'Pengurus' || Auth::user()->role === 'Admin') {
+            $laporanPengurus->user_id           = Auth::id();
+            $laporanPengurus->nama_kegiatan     = $request->nama_kegiatan;
+            $laporanPengurus->tanggal_kegiatan  = $request->tanggal_kegiatan;
+            $laporanPengurus->tempat_kegiatan   = $request->tempat_kegiatan;
+            $laporanPengurus->jumlah_peserta    = $request->jumlah_peserta;
+            $laporanPengurus->foto_kegiatan     = $fotoKegiatan;
+            $laporanPengurus->evaluasi_kegiatan = $request->evaluasi_kegiatan;
+            $laporanPengurus->dokumen_pendukung = $dokumenPendukung;
+        }
+
         $laporanPengurus->save();
 
         DB::commit();
@@ -218,6 +221,10 @@ class LaporanPengurusController extends Controller
         $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
         
         $query = LaporanPengurus::query();
+
+        if(Auth::user()->role === 'Pengurus') {
+            $query->where('user_id', Auth::id());
+        }
         
         if ($request->filter_tanggal) {
             $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);

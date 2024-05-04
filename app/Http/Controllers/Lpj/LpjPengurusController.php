@@ -44,7 +44,10 @@ class LpjPengurusController extends Controller
      */
     public function create()
     {
-        $data['proposalOption'] = ProposalPengurus::where('status_verifikasi', 'Diterima')->get();
+        $data['proposalOption'] = ProposalPengurus::where(([
+            'user_id'           => Auth::id(),
+            'status_verifikasi' => 'Diterima',
+        ]))->get();
 
         return view('pages.lpj.pengurus.create', $data);
     }
@@ -167,10 +170,12 @@ class LpjPengurusController extends Controller
             $dokumenLpj = $file->storeAs('lpj-pengurus/dokumen-lpj', $fileName, 'public');
         }
         
-        $lpjPengurus->proposal_pengurus_id = $request->proposal_pengurus_id;
-        $lpjPengurus->foto_kegiatan     = $fotoKegiatan;
-        $lpjPengurus->dokumen_lpj       = $dokumenLpj;
-        $lpjPengurus->evaluasi          = $request->evaluasi;
+        if(Auth::user()->role === 'Pengurus' || Auth::user()->role === 'Admin') {
+            $lpjPengurus->proposal_pengurus_id = $request->proposal_pengurus_id;
+            $lpjPengurus->foto_kegiatan     = $fotoKegiatan;
+            $lpjPengurus->dokumen_lpj       = $dokumenLpj;
+            $lpjPengurus->evaluasi          = $request->evaluasi;
+        }
 
         // hanya ubah saran jika admin yang ubah
         if(Auth::user()->role === 'Admin') {
@@ -245,6 +250,10 @@ class LpjPengurusController extends Controller
         $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
         
         $query = LpjPengurus::query();
+
+        if(Auth::user()->role === 'Pengurus') {
+            $query->where('user_id', Auth::id());
+        }
         
         if ($request->filter_tanggal) {
             $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);

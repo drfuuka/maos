@@ -44,7 +44,10 @@ class LpjGudepController extends Controller
      */
     public function create()
     {
-        $data['proposalOption'] = ProposalGudep::where('status_verifikasi', 'Diterima')->get();
+        $data['proposalOption'] = ProposalGudep::where([
+            'user_id'           => Auth::id(),
+            'status_verifikasi' => 'Diterima',
+        ])->get();
 
         return view('pages.lpj.gudep.create', $data);
     }
@@ -167,10 +170,13 @@ class LpjGudepController extends Controller
             $dokumenLpj = $file->storeAs('lpj-gudep/dokumen-lpj', $fileName, 'public');
         }
         
-        $lpjGudep->proposal_gudep_id = $request->proposal_gudep_id;
-        $lpjGudep->foto_kegiatan     = $fotoKegiatan;
-        $lpjGudep->dokumen_lpj       = $dokumenLpj;
-        $lpjGudep->evaluasi          = $request->evaluasi;
+
+        if(Auth::user()->role === 'Gudep' || Auth::user()->role === 'Admin') {
+            $lpjGudep->proposal_gudep_id = $request->proposal_gudep_id;
+            $lpjGudep->foto_kegiatan     = $fotoKegiatan;
+            $lpjGudep->dokumen_lpj       = $dokumenLpj;
+            $lpjGudep->evaluasi          = $request->evaluasi;
+        }
 
         // hanya ubah saran jika admin yang ubah
         if(Auth::user()->role === 'Admin') {
@@ -245,6 +251,10 @@ class LpjGudepController extends Controller
         $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
         
         $query = LpjGudep::query();
+        
+        if(Auth::user()->role === 'Gudep') {
+            $query->where('user_id', Auth::id());
+        }
         
         if ($request->filter_tanggal) {
             $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);

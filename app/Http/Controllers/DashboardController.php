@@ -19,24 +19,35 @@ class DashboardController extends Controller
     {
         $userRole = Auth::user()->role;
 
-        $laporanGudep = LaporanGudep::count();
-        $laporanPengurus = LaporanPengurus::count();
+        $laporanGudep  = LaporanGudep::count();
+        $proposalGudep = ProposalGudep::count();
+        $lpjGudep      = LpjGudep::count();
 
+        $laporanPengurus  = LaporanPengurus::count();
+        $proposalPengurus = ProposalPengurus::count();
+        $lpjPengurus      = LpjPengurus::count();
+
+        if($userRole === 'Gudep') {
+            $laporanGudep  = LaporanGudep::where('user_id', Auth::id())->count();
+            $proposalGudep = ProposalGudep::where('user_id', Auth::id())->count();
+            $lpjGudep      = LpjGudep::where('user_id', Auth::id())->count();
+        }
+
+        if($userRole === 'Pengurus') {
+            $laporanPengurus  = LaporanPengurus::where('user_id', Auth::id())->count();
+            $proposalPengurus = ProposalPengurus::where('user_id', Auth::id())->count();
+            $lpjPengurus      = LpjPengurus::where('user_id', Auth::id())->count();
+        }
+    
         $data['total_laporan'] = [
             'gudep'    => $laporanGudep,
             'pengurus' => $laporanPengurus,
         ];
 
-        $proposalGudep = ProposalGudep::count();
-        $proposalPengurus = ProposalPengurus::count();
-
         $data['total_proposal'] = [
             'gudep'    => $proposalGudep,
             'pengurus' => $proposalPengurus,
         ];
-
-        $lpjGudep = LpjGudep::count();
-        $lpjPengurus = LpjPengurus::count();
 
         $data['total_lpj'] = [
             'gudep'    => $lpjGudep,

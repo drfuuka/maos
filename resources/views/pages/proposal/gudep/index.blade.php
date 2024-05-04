@@ -138,14 +138,11 @@
                                                 data-bs-toggle="dropdown" aria-expanded="false"><i
                                                     class="ti ti-dots-vertical"></i></button>
                                             <div class="dropdown-menu" style="">
-                                                @if (Auth::user()->role === 'Gudep')
-                                                    <a class="dropdown-item"
-                                                        href="{{ route('proposal-gudep.edit', $item->id) }}"><i
-                                                            class="ti ti-pencil me-1"></i> Edit</a>
-                                                @else
-                                                    <a class="dropdown-item"
-                                                        href="{{ route('proposal-gudep.edit', $item->id) }}"><i
-                                                            class="ti ti-pencil me-1"></i> Detail</a>
+                                                <a class="dropdown-item"
+                                                    href="{{ route('proposal-gudep.edit', $item->id) }}"><i
+                                                        class="ti ti-pencil me-1"></i>
+                                                    Edit</a>
+                                                @if (Auth::user()->role === 'Admin')
                                                     <form action="{{ route('proposal-gudep.destroy', $item->id) }}"
                                                         method="POST">
                                                         @csrf

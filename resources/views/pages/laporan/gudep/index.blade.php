@@ -147,18 +147,20 @@
                                                     class="ti ti-dots-vertical"></i></button>
                                             <div class="dropdown-menu" style="">
 
-                                                @if (Auth::user()->role === 'Gudep')
+                                                @if (Auth::user()->role === 'Gudep' || Auth::user()->role === 'Admin')
                                                     <a class="dropdown-item"
                                                         href="{{ route('laporan-gudep.edit', $item->id) }}"><i
                                                             class="ti ti-pencil me-1"></i> Edit</a>
-                                                    <form action="{{ route('laporan-gudep.destroy', $item->id) }}"
-                                                        method="POST">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="dropdown-item"><i
-                                                                class="ti ti-trash me-1"></i>
-                                                            Hapus</button>
-                                                    </form>
+                                                    @if (Auth::user()->role === 'Admin')
+                                                        <form action="{{ route('laporan-gudep.destroy', $item->id) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="dropdown-item"><i
+                                                                    class="ti ti-trash me-1"></i>
+                                                                Hapus</button>
+                                                        </form>
+                                                    @endif
                                                 @else
                                                     <a class="dropdown-item"
                                                         href="{{ route('laporan-gudep.edit', $item->id) }}"><i

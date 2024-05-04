@@ -159,17 +159,19 @@ class ProposalPengurusController extends Controller
             $dokumenProposal = $file->storeAs('proposal-pengurus/dokumen-pendukung', $fileName, 'public');
         }
 
-        $proposalPengurus->jenis_proposal    = $request->jenis_proposal;
-        $proposalPengurus->dasar_kegiatan    = $request->dasar_kegiatan;
-        $proposalPengurus->maksud_tujuan     = $request->maksud_tujuan;
-        $proposalPengurus->nama_kegiatan     = $request->nama_kegiatan;
-        $proposalPengurus->tema_kegiatan     = $request->tema_kegiatan;
-        $proposalPengurus->kepanitiaan       = $request->kepanitiaan;
-        $proposalPengurus->tanggal_kegiatan  = $request->tanggal_kegiatan;
-        $proposalPengurus->jadwal_kegiatan   = $request->jadwal_kegiatan;
-        $proposalPengurus->rincian_dana      = $request->rincian_dana;
-        $proposalPengurus->penutup           = $request->penutup;
-        $proposalPengurus->dokumen_proposal  = $dokumenProposal;
+        if(Auth::user()->role === 'Pengurus' || Auth::user()->role === 'Admin') {
+            $proposalPengurus->jenis_proposal    = $request->jenis_proposal;
+            $proposalPengurus->dasar_kegiatan    = $request->dasar_kegiatan;
+            $proposalPengurus->maksud_tujuan     = $request->maksud_tujuan;
+            $proposalPengurus->nama_kegiatan     = $request->nama_kegiatan;
+            $proposalPengurus->tema_kegiatan     = $request->tema_kegiatan;
+            $proposalPengurus->kepanitiaan       = $request->kepanitiaan;
+            $proposalPengurus->tanggal_kegiatan  = $request->tanggal_kegiatan;
+            $proposalPengurus->jadwal_kegiatan   = $request->jadwal_kegiatan;
+            $proposalPengurus->rincian_dana      = $request->rincian_dana;
+            $proposalPengurus->penutup           = $request->penutup;
+            $proposalPengurus->dokumen_proposal  = $dokumenProposal;
+        }
 
         if($request->status_verifikasi && $request->status_verifikasi !== $proposalPengurus->status_verifikasi) {
             $proposalPengurus->status_verifikasi = $request->status_verifikasi;
@@ -194,6 +196,10 @@ class ProposalPengurusController extends Controller
      */
     public function destroy(string $id)
     {
+        if(Auth::user()->role !== 'Admin') {
+            return redirect()->route('proposal-pengurus.index')->with('error', 'Kamu tidak memiliki akses');
+        }
+
         DB::beginTransaction();
 
         $proposalPengurus = ProposalPengurus::find($id);
@@ -231,6 +237,10 @@ class ProposalPengurusController extends Controller
         $data['tanggal'] = $request->filter_tanggal ? $dari_tanggal->format('d M Y') . ' - ' . $sampai_tanggal->format('d M Y') : 'Seluruh Tanggal';
         
         $query = ProposalPengurus::query();
+
+        if(Auth::user()->role === 'Pengurus') {
+            $query->where('user_id', Auth::id());
+        }
         
         if ($request->filter_tanggal) {
             $query->whereBetween('created_at', [$dari_tanggal, $sampai_tanggal]);

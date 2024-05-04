@@ -25,7 +25,7 @@
 
     <span>{{ $data->nama_kegiatan }}</span>
 
-    <h3 style="margin-top: 50px; margin-bottom: 50px">Telah disetujui</h3>
+    <h3 style="margin-top: 50px; margin-bottom: 50px">{{ $data->status_verifikasi }}</h3>
 
     <span class="center">Mengetahui,</span>
 </div>
