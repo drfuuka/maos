@@ -2,6 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Laporan\LaporanGudep;
+use App\Models\Laporan\LaporanPengurus;
+use App\Models\Lpj\LpjGudep;
+use App\Models\Lpj\LpjPengurus;
+use App\Models\Proposal\ProposalGudep;
+use App\Models\Proposal\ProposalPengurus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -58,6 +64,36 @@ class User extends Authenticatable
         }
         if($this->role === 'Ketua') {
             return $this->hasOne(KetuaDetail::class);
+        }
+    }
+
+    public function laporan()
+    {
+        if($this->role === 'Gudep') {
+            return $this->hasMany(LaporanGudep::class, 'user_id', 'id');
+        }
+        if($this->role === 'Pengurus') {
+            return $this->hasMany(LaporanPengurus::class, 'user_id', 'id');
+        }
+    }
+
+    public function proposal()
+    {
+        if($this->role === 'Gudep') {
+            return $this->hasMany(ProposalGudep::class, 'user_id', 'id');
+        }
+        if($this->role === 'Pengurus') {
+            return $this->hasMany(ProposalPengurus::class, 'user_id', 'id');
+        }
+    }
+
+    public function lpj()
+    {
+        if($this->role === 'Gudep') {
+            return $this->hasMany(LpjGudep::class, 'user_id', 'id');
+        }
+        if($this->role === 'Pengurus') {
+            return $this->hasMany(LpjPengurus::class, 'user_id', 'id');
         }
     }
 }

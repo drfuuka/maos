@@ -2,7 +2,7 @@
     <div class="app-brand demo">
         <a href="index.html" class="app-brand-link">
             <img src="{{ asset('logo.png') }}" alt="" width="30">
-            <span class="app-brand-text demo menu-text fw-bold">MAOS</span>
+            <span class="app-brand-text demo menu-text fw-bold">{{ Auth::user()->role }}</span>
         </a>
 
         <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

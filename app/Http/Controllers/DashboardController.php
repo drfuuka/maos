@@ -15,28 +15,30 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $year = $request->input('year');
+
         $userRole = Auth::user()->role;
 
-        $laporanGudep  = LaporanGudep::count();
-        $proposalGudep = ProposalGudep::count();
-        $lpjGudep      = LpjGudep::count();
+        $laporanGudep  = $year ? LaporanGudep::whereYear('created_at', $year)->count() : LaporanGudep::count();
+        $proposalGudep = $year ? ProposalGudep::whereYear('created_at', $year)->count() : ProposalGudep::count();
+        $lpjGudep      = $year ? LpjGudep::whereYear('created_at', $year)->count() : LpjGudep::count();
 
-        $laporanPengurus  = LaporanPengurus::count();
-        $proposalPengurus = ProposalPengurus::count();
-        $lpjPengurus      = LpjPengurus::count();
+        $laporanPengurus  = $year ? LaporanPengurus::whereYear('created_at', $year)->count() : LaporanPengurus::count();
+        $proposalPengurus = $year ? ProposalPengurus::whereYear('created_at', $year)->count() : ProposalPengurus::count();
+        $lpjPengurus      = $year ? LpjPengurus::whereYear('created_at', $year)->count() : LpjPengurus::count();
 
         if($userRole === 'Gudep') {
-            $laporanGudep  = LaporanGudep::where('user_id', Auth::id())->count();
-            $proposalGudep = ProposalGudep::where('user_id', Auth::id())->count();
-            $lpjGudep      = LpjGudep::where('user_id', Auth::id())->count();
+            $laporanGudep  = $year ? LaporanGudep::whereYear('created_at', $year)->count() : LaporanGudep::where('user_id', Auth::id())->count();
+            $proposalGudep = $year ? ProposalGudep::whereYear('created_at', $year)->count() : ProposalGudep::where('user_id', Auth::id())->count();
+            $lpjGudep      = $year ? LpjGudep::whereYear('created_at', $year)->count() : LpjGudep::where('user_id', Auth::id())->count();
         }
 
         if($userRole === 'Pengurus') {
-            $laporanPengurus  = LaporanPengurus::where('user_id', Auth::id())->count();
-            $proposalPengurus = ProposalPengurus::where('user_id', Auth::id())->count();
-            $lpjPengurus      = LpjPengurus::where('user_id', Auth::id())->count();
+            $laporanPengurus  = $year ? LaporanPengurus::whereYear('created_at', $year)->count() : LaporanPengurus::where('user_id', Auth::id())->count();
+            $proposalPengurus = $year ? ProposalPengurus::whereYear('created_at', $year)->count() : ProposalPengurus::where('user_id', Auth::id())->count();
+            $lpjPengurus      = $year ? LpjPengurus::whereYear('created_at', $year)->count() : LpjPengurus::where('user_id', Auth::id())->count();
         }
     
         $data['total_laporan'] = [
@@ -56,9 +58,65 @@ class DashboardController extends Controller
 
         if($userRole === 'Admin') {
             $data['user'] = User::whereNull('is_active')->get();
+
+            $gugusDepan = User::where('role', 'Gudep')
+            ->get()
+            ->map(function ($item) use($year) {
+                return [
+                    'nama'     => $item->fullname,
+                    'laporan'  => $year ? $item->laporan()->whereYear('created_at', $year)->count() : $item->laporan->count(),
+                    'proposal' => $year ? $item->proposal()->whereYear('created_at', $year)->count() : $item->proposal->count(),
+                    'lpj'      => $year ? $item->lpj()->whereYear('created_at', $year)->count() : $item->lpj->count(),
+                ];
+            });
+
+            $pengurus = User::where('role', 'Pengurus')
+            ->get()
+            ->map(function ($item) use($year) {
+                return [
+                    'nama'     => $item->fullname,
+                    'laporan'  => $year ? $item->laporan()->whereYear('created_at', $year)->count() : $item->laporan->count(),
+                    'proposal' => $year ? $item->proposal()->whereYear('created_at', $year)->count() : $item->proposal->count(),
+                    'lpj'      => $year ? $item->lpj()->whereYear('created_at', $year)->count() : $item->lpj->count(),
+                ];
+            });
+
+            $data['detail'] = [
+                'gugus_depan' => $gugusDepan,
+                'pengurus'    => $pengurus,
+            ];
+
             return view('pages.dashboard.admin', $data);
 
         } else if($userRole === 'Ketua') {
+
+            $gugusDepan = User::where('role', 'Gudep')
+            ->get()
+            ->map(function ($item) use($year) {
+                return [
+                    'nama'     => $item->fullname,
+                    'laporan'  => $year ? $item->laporan()->whereYear('created_at', $year)->count() : $item->laporan->count(),
+                    'proposal' => $year ? $item->proposal()->whereYear('created_at', $year)->count() : $item->proposal->count(),
+                    'lpj'      => $year ? $item->lpj()->whereYear('created_at', $year)->count() : $item->lpj->count(),
+                ];
+            });
+
+            $pengurus = User::where('role', 'Pengurus')
+            ->get()
+            ->map(function ($item) use($year) {
+                return [
+                    'nama'     => $item->fullname,
+                    'laporan'  => $year ? $item->laporan()->whereYear('created_at', $year)->count() : $item->laporan->count(),
+                    'proposal' => $year ? $item->proposal()->whereYear('created_at', $year)->count() : $item->proposal->count(),
+                    'lpj'      => $year ? $item->lpj()->whereYear('created_at', $year)->count() : $item->lpj->count(),
+                ];
+            });
+
+
+            $data['detail'] = [
+                'gugus_depan' => $gugusDepan,
+                'pengurus'    => $pengurus,
+            ];
 
             return view('pages.dashboard.ketua', $data);
 

@@ -130,8 +130,9 @@
                                     </td>
                                     <td>
                                         <a href="{{ Storage::url($item->dokumen_lpj) }}" target="_blank">
-                                            <img src="{{ Storage::url($item->dokumen_lpj) }}" alt=""
-                                                width="100">
+                                            <span class="text-nowrap">
+                                                {{($item->dokumen_lpj)}}
+                                            </span>
                                         </a>
                                     </td>
                                     <td>{{ $item->evaluasi }}</td>
@@ -143,7 +144,7 @@
                                     @else
                                         <td><span class="badge bg-label-danger">Ditolak</span></td>
                                     @endif
-                                    <td>{{ $item->user->fullname }}</td>
+                                    <td>{{ $item->user->username }}</td>
                                     <td>{{ \Carbon\Carbon::create($item->created_at)->format('d M Y') }}</td>
                                     <td>
                                         <div class="dropdown">

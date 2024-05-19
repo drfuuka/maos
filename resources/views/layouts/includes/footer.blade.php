@@ -6,7 +6,7 @@
                 <script>
                     document.write(new Date().getFullYear());
                 </script>
-                made with ❤️ by Touch Me
+                made with ❤️ Politeknik Negeri Cilacap
             </div>
         </div>
     </div>

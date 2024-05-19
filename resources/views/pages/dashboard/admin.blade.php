@@ -5,6 +5,23 @@
 @section('content')
 
     <div class="row">
+        <div class="d-flex align-items-center justify-content-between">
+            <h3>Dashboard</h3>
+            <!-- Year Filter Form -->
+            <form method="GET" action="{{ route('dashboard') }}" class="mb-3">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <select name="year" class="form-select">
+                        <option value="">Pilih Tahun</option>
+                        @foreach (range(date('Y'), date('Y') - 10) as $year)
+                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
         <div class="col-12 col-md-4">
             <div class="card">
                 <div class="card-body">
@@ -83,6 +100,114 @@
                                     <span class="fs-1">{{ $total_lpj['pengurus'] }}</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 mt-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column">
+                        <div class="card-title mb-auto">
+                            <h5 class="mb-1 text-nowrap">Gugus Depan</h5>
+                            <small>Jumlah detail kegiatan gugus depan</small>
+                        </div>
+
+                        <div class="mt-3">
+
+                            @if (session('success'))
+                                <div class="alert alert-success alert-dismissible">
+                                    {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                    </button>
+                                </div>
+                            @endif
+
+                            <div class="table-responsive text-nowrap">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Pengguna</th>
+                                            <th>Laporan</th>
+                                            <th>Proposal</th>
+                                            <th>LPJ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="table-border-bottom-0">
+                                        @if ($detail['gugus_depan']->count())
+                                            @foreach ($detail['gugus_depan'] as $item)
+                                                <tr>
+                                                    <td>{{ $item['nama'] }}</td>
+                                                    <td>{{ $item['laporan'] }}</td>
+                                                    <td>{{ $item['proposal'] }}</td>
+                                                    <td>{{ $item['lpj'] }}</td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="8" class="text-center">Tidak ada data ditemukan</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 mt-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex flex-column">
+                        <div class="card-title mb-auto">
+                            <h5 class="mb-1 text-nowrap">Pengurus</h5>
+                            <small>Jumlah detail kegiatan pengurus</small>
+                        </div>
+
+                        <div class="mt-3">
+
+                            @if (session('success'))
+                                <div class="alert alert-success alert-dismissible">
+                                    {{ session('success') }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                                    </button>
+                                </div>
+                            @endif
+
+                            <div class="table-responsive text-nowrap">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Nama Pengguna</th>
+                                            <th>Laporan</th>
+                                            <th>Proposal</th>
+                                            <th>LPJ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="table-border-bottom-0">
+                                        @if ($detail['pengurus']->count())
+                                            @foreach ($detail['pengurus'] as $item)
+                                                <tr>
+                                                    <td>{{ $item['nama'] }}</td>
+                                                    <td>{{ $item['laporan'] }}</td>
+                                                    <td>{{ $item['proposal'] }}</td>
+                                                    <td>{{ $item['lpj'] }}</td>
+                                                </tr>
+                                            @endforeach
+                                        @else
+                                            <tr>
+                                                <td colspan="8" class="text-center">Tidak ada data ditemukan</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+
                         </div>
                     </div>
                 </div>

@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 Route::group(['controller' => AuthController::class], function() {
     Route::get('login', 'showLoginForm')->name('login.index');
     Route::get('register', 'showRegisterForm')->name('register.index');
-    
+
     Route::post('login', 'login')->name('login.authenticate');
     Route::post('register', 'register')->name('register.create');
     Route::get('logout', 'logout')->name('logout');

@@ -133,11 +133,12 @@
                                     <td>{{ $item->evaluasi_kegiatan }}</td>
                                     <td>
                                         <a href="{{ Storage::url($item->dokumen_pendukung) }}" target="_blank">
-                                            <img src="{{ Storage::url($item->dokumen_pendukung) }}" alt=""
-                                                width="100">
+                                            <span class="text-nowrap">
+                                                {{($item->dokumen_pendukung)}}
+                                            </span>
                                         </a>
                                     </td>
-                                    <td>{{ $item->user->fullname }}</td>
+                                    <td>{{ $item->user->username }}</td>
                                     <td>{{ \Carbon\Carbon::create($item->created_at)->format('d M Y') }}</td>
 
                                     <td>

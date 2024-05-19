@@ -130,7 +130,7 @@
                                     @else
                                         <td><span class="badge bg-label-danger">Ditolak</span></td>
                                     @endif
-                                    <td>{{ $item->user->fullname }}</td>
+                                    <td>{{ $item->user->username }}</td>
                                     <td>{{ \Carbon\Carbon::create($item->created_at)->format('d M Y') }}</td>
                                     <td>
                                         <div class="dropdown">

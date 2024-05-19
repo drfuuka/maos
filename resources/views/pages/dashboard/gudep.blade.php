@@ -5,6 +5,23 @@
 @section('content')
 
     <div class="row">
+        <div class="d-flex align-items-center justify-content-between">
+            <h3>Dashboard</h3>
+            <!-- Year Filter Form -->
+            <form method="GET" action="{{ route('dashboard') }}" class="mb-3">
+                <div class="d-flex align-items-center justify-content-between gap-3">
+                    <select name="year" class="form-select">
+                        <option value="">Pilih Tahun</option>
+                        @foreach (range(date('Y'), date('Y') - 10) as $year)
+                            <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </form>
+        </div>
         <div class="col-12 col-md-4">
             <div class="card">
                 <div class="card-body">
